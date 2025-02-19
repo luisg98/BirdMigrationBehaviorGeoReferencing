@@ -23,6 +23,11 @@ def load_and_filter_data(file_path, output_file, output_file_to_augment):
     # Remove rows where BOTH latitude and longitude are None
     df = df[~(df['location-lat'].isna() & df['location-long'].isna())]
 
+     # Remove rows where latitude is exactly 0.001
+    outlier_count = (df['location-lat'] == 0.001).sum()
+    df = df[df['location-lat'] != 0.001]
+    after_outlier_count = len(df)
+
     # Save the cleaned dataset
     df.to_csv(output_csv_to_augment, index=False)
 
@@ -36,10 +41,7 @@ def load_and_filter_data(file_path, output_file, output_file_to_augment):
         "tag-local-identifier": "bird_id"
     }, inplace=True)
     
-    # Remove rows where latitude is exactly 0.001
-    outlier_count = (df['latitude'] == 0.001).sum()
-    df = df[df['latitude'] != 0.001]
-    after_outlier_count = len(df)
+
     
     # Save the cleaned dataset
     df.to_csv(output_file, index=False)
