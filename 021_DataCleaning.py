@@ -1,6 +1,6 @@
 import pandas as pd
 
-def load_and_filter_data(file_path, output_file):
+def load_and_filter_data(file_path, output_file, output_file_to_augment):
     """
     Loads the merged dataset and selects specific columns for further analysis.
     
@@ -19,6 +19,13 @@ def load_and_filter_data(file_path, output_file):
     
     # Remove rows with missing values in any of the selected columns
     missing_values_count = df.isnull().sum().sum()
+
+    # Remove rows where BOTH latitude and longitude are None
+    df = df[~(df['location-lat'].isna() & df['location-long'].isna())]
+
+    # Save the cleaned dataset
+    df.to_csv(output_csv_to_augment, index=False)
+
     df.dropna(inplace=True)
     after_missing_values_count = len(df)
     
@@ -45,6 +52,7 @@ def load_and_filter_data(file_path, output_file):
 # Input and output file paths
 input_csv = "Data/Migration of red-backed shrikes.csv"
 output_csv = "Data/Filtered_Migration_Data.csv"
+output_csv_to_augment = "Data/DataWithUnkownLatitude.csv"
 
 # Call the function to load and filter the dataset
-load_and_filter_data(input_csv, output_csv)
+load_and_filter_data(input_csv, output_csv, output_csv_to_augment)
