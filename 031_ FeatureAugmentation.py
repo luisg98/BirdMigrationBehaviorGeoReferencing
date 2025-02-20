@@ -91,8 +91,7 @@ def enrich_migration_data(file_path, output_file, fetch_weather=True, fetch_sola
         # Save dataset after processing each row
         if updated and len(df) == 51150:
             df.to_csv(output_file, index=False)
-            df.to_csv(output_file + 'backup.csv', index=False)
-        
+                    
     # Avoid excessive API requests
      #time.sleep(1)
     

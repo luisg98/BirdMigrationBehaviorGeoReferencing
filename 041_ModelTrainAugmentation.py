@@ -8,6 +8,8 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 import os
 
+
+
 # Load data from CSV file
 def load_data(file_path):
     data = pd.read_csv(file_path)
@@ -48,9 +50,9 @@ def train_lstm(X_train, X_val, y_train, y_val, model_path='Model/LSTM/lstm_model
     model.compile(optimizer='adam', loss='mean_squared_error')
     
     # Implement Early Stopping to avoid overfitting
-    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
     
-    model.fit(X_train, y_train, epochs=100, batch_size=32, validation_data=(X_val, y_val), verbose=1, callbacks=[early_stopping])
+    model.fit(X_train, y_train, epochs=500, batch_size=32, validation_data=(X_val, y_val), verbose=1, callbacks=[early_stopping])
     
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     model.save(model_path)

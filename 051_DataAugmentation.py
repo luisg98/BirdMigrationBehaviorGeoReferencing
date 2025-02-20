@@ -9,13 +9,16 @@ def impute_latitude(data):
     original_columns = data.columns
 
     # Carregar o modelo treinado
-    model = load_model('model/lstm_model.h5')
+    model = load_model('Model/LSTM/lstm_model.h5')
 
     # Remover linhas onde 'timestamp' ou 'location-long' são nulos
     data = data.dropna(subset=['timestamp', 'location-long']).copy()
 
     # Criar um DataFrame apenas com as colunas necessárias para a previsão
     data_filtered = data[['timestamp', 'location-lat', 'location-long']].copy()
+
+    data ['synthetic'] = 0  # Adicionar uma coluna para marcar os valores sintéticos
+    data_filtered['synthetic'] = 0  # Adicionar uma coluna para marcar os valores sintéticos
 
     # Converter o timestamp para formato numérico
     data_filtered['timestamp'] = pd.to_datetime(data_filtered['timestamp'])
@@ -53,15 +56,18 @@ def impute_latitude(data):
         if not pd.isna(predicted_value) and np.isfinite(predicted_value):
             # Substituir apenas valores nulos pela previsão desnormalizada
             data_filtered.at[i, 'location-lat'] = predicted_value
+            data_filtered.at[i, 'synthetic'] = 1
             print(f"Latitude prevista para a linha {i} (desnormalizada): {predicted_value}")
 
     # Restaurar as outras colunas do dataset original
-    data.update(data_filtered[['location-lat']])
+    data.update(data_filtered[['location-lat', 'synthetic']])
+
+    
 
     # Salvar o resultado final
-    data.to_csv('data_imputed_with_latitude.csv', index=False, encoding='utf-8')
+    data.to_csv('Data/AugmentedData.csv', index=False, encoding='utf-8')
     print("Valores de latitude preenchidos e dataset salvo com sucesso!")
 
 # Carregar o dataset e rodar a imputação
-data = pd.read_csv('Migration of red-backed shrikes from the Iberian Peninsula (data from Tttrup et al. 2017).csv')
+data = pd.read_csv('Data/DataWithUnkownLatitude.csv')
 impute_latitude(data)
