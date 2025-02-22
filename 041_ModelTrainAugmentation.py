@@ -173,10 +173,10 @@ def main():
 
     # Train models
     models = {
-        #"LSTM": train_lstm(X_train, X_val, y_train, y_val),
+        "LSTM": train_lstm(X_train, X_val, y_train, y_val),
         "XGBoost": train_xgboost(X_train.reshape(X_train.shape[0], -1), X_val.reshape(X_val.shape[0], -1), y_train, y_val),
-        #"MLP": train_mlp(X_train.reshape(X_train.shape[0], -1), X_val.reshape(X_val.shape[0], -1), y_train, y_val),
-        #"GNN": train_gnn(X_train.reshape(X_train.shape[0], -1), y_train),
+        "MLP": train_mlp(X_train.reshape(X_train.shape[0], -1), X_val.reshape(X_val.shape[0], -1), y_train, y_val),
+        "GNN": train_gnn(X_train.reshape(X_train.shape[0], -1), y_train),
     }
 
     # Evaluate all models on **test dataset**
