@@ -3,71 +3,70 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 
-# Função para preencher os valores faltantes de latitude e restaurar as outras features
+# Function to fill missing latitude values and restore other features
 def impute_latitude(data):
-    # Salvar as colunas originais para reintegrá-las depois
+    # Save the original column names to reintegrate later
     original_columns = data.columns
 
-    # Carregar o modelo treinado
+    # Load the pre-trained LSTM model
     model = load_model('Model/LSTM/lstm_model.h5')
 
-    # Remover linhas onde 'timestamp' ou 'location-long' são nulos
+    # Drop rows where 'timestamp' or 'location-long' are null
     data = data.dropna(subset=['timestamp', 'location-long']).copy()
 
-    # Criar um DataFrame apenas com as colunas necessárias para a previsão
+    # Create a new DataFrame containing only relevant columns for prediction
     data_filtered = data[['timestamp', 'location-lat', 'location-long']].copy()
 
-    data ['synthetic'] = 0  # Adicionar uma coluna para marcar os valores sintéticos
-    data_filtered['synthetic'] = 0  # Adicionar uma coluna para marcar os valores sintéticos
+    # Add a column to mark synthetic (imputed) values
+    data['synthetic'] = 0  
+    data_filtered['synthetic'] = 0  
 
-    # Converter o timestamp para formato numérico
+    # Convert timestamp to numeric format (seconds since epoch)
     data_filtered['timestamp'] = pd.to_datetime(data_filtered['timestamp'])
-    data_filtered['timestamp'] = data_filtered['timestamp'].astype('int64') // 10**9  # Convertendo para segundos desde a época
+    data_filtered['timestamp'] = data_filtered['timestamp'].astype('int64') // 10**9  
 
-    # Separar os dados conhecidos e desconhecidos
+    # Separate known and unknown latitude values
     known_lat = data_filtered.dropna(subset=['location-lat']).copy()
     unknown_lat = data_filtered[data_filtered['location-lat'].isna()].copy()
 
-    # Criar escaladores separados
-    scaler_input = MinMaxScaler(feature_range=(0, 1))  # Para timestamp e location-long
-    scaler_lat = MinMaxScaler(feature_range=(0, 1))  # Para location-lat
+    # Create separate scalers for input features and latitude
+    scaler_input = MinMaxScaler(feature_range=(0, 1))  # For timestamp and location-long
+    scaler_lat = MinMaxScaler(feature_range=(0, 1))  # For location-lat
 
-    # Ajustar os escaladores usando apenas os dados conhecidos
+    # Fit the scalers using only known latitude values
     scaler_input.fit(known_lat[['timestamp', 'location-long']])
-    scaler_lat.fit(known_lat[['location-lat']])  # Normaliza apenas a latitude conhecida
+    scaler_lat.fit(known_lat[['location-lat']])  
 
-    # Normalizar os dados de entrada (timestamp e longitude)
+    # Normalize input data (timestamp and longitude)
     unknown_lat_scaled = scaler_input.transform(unknown_lat[['timestamp', 'location-long']])
 
-    # Prever e substituir apenas os valores ausentes na latitude
+    # Predict and replace missing latitude values
     for i, row in unknown_lat.iterrows():
         X_single = unknown_lat_scaled[unknown_lat.index.get_loc(i)].reshape(1, 1, -1)
 
-        print(f"Previsão de latitude para a linha {i} com os dados normalizados: {X_single}")
+        print(f"Predicting latitude for row {i} with normalized data: {X_single}")
 
-        # Prever a latitude normalizada
+        # Predict normalized latitude
         predicted_latitude = model.predict(X_single)
         predicted_value_normalized = predicted_latitude[0, 0]
 
-        # Desnormalizar a previsão
+        # Denormalize the prediction
         predicted_value = scaler_lat.inverse_transform([[predicted_value_normalized]])[0, 0]
 
-        # Verifica se a previsão é válida
+        # Validate the prediction
         if not pd.isna(predicted_value) and np.isfinite(predicted_value):
-            # Substituir apenas valores nulos pela previsão desnormalizada
+            # Replace only null values with the predicted latitude
             data_filtered.at[i, 'location-lat'] = predicted_value
             data_filtered.at[i, 'synthetic'] = 1
-            print(f"Latitude prevista para a linha {i} (desnormalizada): {predicted_value}")
+            print(f"Predicted latitude for row {i} (denormalized): {predicted_value}")
 
-    # Restaurar as outras colunas do dataset original
+    # Restore the updated latitude values into the original dataset
     data.update(data_filtered[['location-lat', 'synthetic']])
 
-    
-
-    # Salvar o resultado final
+    # Save the final dataset
     data.to_csv('Data/AugmentedData.csv', index=False, encoding='utf-8')
-    print("Valores de latitude preenchidos e dataset salvo com sucesso!")
+    print("Latitude values filled and dataset saved successfully!")
 
-# Carregar o dataset e rodar a imputação
+# Load the dataset and run the imputation
 data = pd.read_csv('Data/DataWithUnkownLatitude.csv')
 impute_latitude(data)

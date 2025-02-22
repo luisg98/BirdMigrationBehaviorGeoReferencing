@@ -54,7 +54,7 @@ def load_and_filter_data(file_path, output_file, output_file_to_augment):
 # Input and output file paths
 input_csv = "Data/Migration of red-backed shrikes.csv"
 output_csv = "Data/Filtered_Migration_Data.csv"
-output_csv_to_augment = "Data/DataWithUnkownLatitude.csv"
+output_csv_to_augment = "Data/DataWithUnknownLatitude.csv"
 
 # Call the function to load and filter the dataset
 load_and_filter_data(input_csv, output_csv, output_csv_to_augment)
