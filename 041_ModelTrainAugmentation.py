@@ -3,7 +3,7 @@ import numpy as np
 import os
 import time
 import tensorflow as tf
-from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
@@ -26,7 +26,7 @@ def load_data(file_path):
 
 # Preprocess data
 def preprocess_data(data):
-    data = data.dropna(subset=['timestamp', 'latitude', 'longitude'])
+    data = data.dropna()
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(data[['timestamp', 'longitude', 'latitude']])
     return scaled_data, scaler
@@ -52,40 +52,21 @@ def train_lstm(X_train, X_val, y_train, y_val, model_path='Model/LSTM/lstm_model
     
     model.compile(optimizer='adam', loss='mean_squared_error')
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    model.fit(X_train, y_train, epochs=200, batch_size=32, validation_data=(X_val, y_val), callbacks=[early_stopping])
+    model.fit(X_train, y_train, epochs=100, batch_size=32, validation_data=(X_val, y_val), callbacks=[early_stopping])
     
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     model.save(model_path)
     return model
 
-def train_xgboost(X_train, X_val, y_train, y_val, model_path='Model/XGB/xgboost_model.json', features_path='Model/XGB/features.pkl'):
-    # Definir os nomes das colunas se forem arrays NumPy
-    if isinstance(X_train, np.ndarray):
-        if X_train.ndim == 1:
-            raise ValueError("X_train deve ser uma matriz bidimensional, não um vetor.")
-
-        feature_names = [f'feature_{i}' for i in range(X_train.shape[1])]
-        X_train = pd.DataFrame(X_train, columns=feature_names)
-        X_val = pd.DataFrame(X_val, columns=feature_names)
-    else:
-        feature_names = X_train.columns.tolist()
-
-    # Inicializar e treinar o modelo XGBoost
+# Train XGBoost
+def train_xgboost(X_train, X_val, y_train, y_val, model_path='Model/XGB/xgboost_model.json'):
     model = XGBRegressor(objective='reg:squarederror', n_estimators=1000, learning_rate=0.1, random_state=42)
     model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=True)
-
-    # Salvar o modelo
+    
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     model.save_model(model_path)
-
-    # Salvar os nomes das features utilizadas durante o treinamento
-    with open(features_path, 'wb') as f:
-        pickle.dump(feature_names, f)
-
-    print(f"✅ Modelo salvo em {model_path}")
-    print(f"✅ Features utilizadas: {feature_names}")
-
     return model
+
 # Train MLP model
 def train_mlp(X_train, X_val, y_train, y_val, model_path='Model/MLP/mlp_model.pkl'):
     model = MLPRegressor(hidden_layer_sizes=(100, 50), max_iter=1000, alpha=0.01, solver='adam', random_state=42, early_stopping=True, validation_fraction=0.2, n_iter_no_change=10, verbose=True)
@@ -106,7 +87,7 @@ class GNN(nn.Module):
         x = self.conv1(x, edge_index).relu()
         x = self.conv2(x, edge_index)
         return x
-
+    
 # Train GNN model
 def train_gnn(X_train, y_train, model_path='Model/GNN/gnn_model.pth'):
     num_nodes = X_train.shape[0]
@@ -121,6 +102,7 @@ def train_gnn(X_train, y_train, model_path='Model/GNN/gnn_model.pth'):
     best_loss = float('inf')
     patience = 5
     no_improve = 0
+    loss_values = []
     
     for epoch in range(500):
         optimizer.zero_grad()
@@ -128,6 +110,8 @@ def train_gnn(X_train, y_train, model_path='Model/GNN/gnn_model.pth'):
         loss = loss_fn(output, y_train_torch)
         loss.backward()
         optimizer.step()
+        
+        loss_values.append(loss.item())
         
         if loss.item() < best_loss:
             best_loss = loss.item()
@@ -146,16 +130,16 @@ def train_gnn(X_train, y_train, model_path='Model/GNN/gnn_model.pth'):
 def evaluate_model(model, X_test, y_test, model_type):
     if model_type == 'lstm':
         predictions = model.predict(X_test)
-    elif model_type in ['xgboost', 'mlp']:
-        predictions = model.predict(X_test.reshape(X_test.shape[0], -1))
     elif model_type == 'gnn':
         X_test_torch = torch.tensor(X_test.reshape(X_test.shape[0], -1), dtype=torch.float32)
         edge_index = torch.randint(0, X_test.shape[0], (2, X_test.shape[0]), dtype=torch.long)
+
+        model.eval()
         with torch.no_grad():
             predictions = model(X_test_torch, edge_index).squeeze().numpy()
     else:
-        raise ValueError("Invalid model type")
-
+        predictions = model.predict(X_test.reshape(X_test.shape[0], -1))
+    
     mse = np.mean((predictions - y_test) ** 2)
     mae = np.mean(np.abs(predictions - y_test))
     return mse, mae
@@ -179,10 +163,8 @@ def main():
         "GNN": train_gnn(X_train.reshape(X_train.shape[0], -1), y_train),
     }
 
-    # Evaluate all models on **test dataset**
+    # Evaluate models
     results = {name: evaluate_model(model, X_test, y_test, name.lower()) for name, model in models.items()}
-    
-    # Store results in a DataFrame
     results_df = pd.DataFrame.from_dict(results, orient='index', columns=['MSE', 'MAE'])
     print(results_df)
 

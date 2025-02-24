@@ -96,6 +96,7 @@ fig.update_layout(
 
 # Display the map
 fig.show()
+fig.savefig("Results/Heatmap.png")
 print("Heatmap visualization displayed.")
 
 print("All KDE models saved in the 'Models/' folder.")
