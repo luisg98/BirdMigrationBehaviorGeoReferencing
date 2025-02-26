@@ -1,53 +1,28 @@
-# Predicting Bird Migration Behavior Using Geo-Referencing
+# Bird Migration Behavior Georeferencing
 
-## Project Overview
+## 📌 Overview
+This repository contains the code and data used for analyzing and predicting the migratory trajectories of the **red-backed shrike** (*Lanius collurio*). The study employs various **machine learning** models to predict bird migration patterns and includes data preprocessing, feature engineering, model evaluation, and synthetic trajectory generation. 
 
-This project focuses on analyzing and predicting the migratory behavior of **red-backed shrikes (Lanius collurio)**, a migratory bird species studied in Europe and Africa. The dataset explores the detour migration routes of birds from the Iberian Peninsula to their southern African wintering grounds and back, aiming to uncover insights about their movement, detour optimization, and environmental interactions.
+## 📊 Key Features
+- **Data Integration & Cleaning**: Merging and standardizing GPS telemetry and environmental datasets.
+- **Machine Learning Models**:
+  - XGBoost (Best performing model)
+  - LSTM (Long Short-Term Memory networks)
+  - Multi-Layer Perceptron (MLP)
+  - Graph Neural Networks (GNN)
+- **Latitude Imputation**: Handling missing latitude values using an XGBoost-based imputation method.
+- **Synthetic Data Generation**:
+  - **Gaussian Mixture Model (GMM)**: Used for realistic migration trajectory simulations.
+  - **Variational Autoencoder (VAE)**: Learning latent spatial patterns for synthetic migration modeling.
+- **Heatmap Visualization**: Generating monthly heatmaps to analyze seasonal migration trends.
 
-The goal of this project is to:
-- Build predictive models to classify and anticipate bird behaviors during migration (e.g., stopovers, active migration).
-- Use geospatial, temporal, and behavioral data to uncover patterns in migration routes and their relationship with environmental conditions like wind assistance and historical factors.
+## 📁 Dataset
+The dataset consists of GPS tracking records of **red-backed shrikes**
+The four CSV files merged into one dataset are:
 
-To enhance the analysis, the project employs **deep learning techniques** (e.g., Recurrent Neural Networks or Convolutional Neural Networks) and **data augmentation** to address challenges like small sample sizes and rare migratory events.
+1. **Migration of male and female red-backed shrikes from southern Scandinavia (Pedersen et al. 2019)**  
+2. **Migration of red-backed shrike populations (Pedersen et al. 2020)**  
+3. **Migration of red-backed shrikes from southern Scandinavia (Pedersen et al. 2018)**  
+4. **Migration of red-backed shrikes from the Iberian Peninsula (Tttrup et al. 2017)**  
 
-## Dataset
-
-The dataset contains **geolocator data** tracking the migration of six individual red-backed shrikes (Lanius collurio) from breeding grounds in Spain to their African wintering sites. Key details include:
-- **Study Name**: Migration of red-backed shrikes from the Iberian Peninsula (data from Tøttrup et al. 2017).
-- **Dataset Source**: Movebank repository and related publications.
-- **Time Range**: Data spans from **June 2011** to **July 2014**.
-- **Geographic Focus**: Breeding in Spain, detour via Southeast Europe, and wintering in Southern Africa.
-- **Taxon**: Lanius collurio (red-backed shrike).
-
-### Dataset Statistics
-- **Number of Animals**: 6
-- **Number of Tags**: 7
-- **Number of Locations**: 4,403 geolocated records
-- **Features**:
-  - Temporal data: timestamps for geolocation events.
-  - Spatial data: latitude and longitude of bird movements.
-  - Environmental data: inferred factors like wind assistance.
-
-## Key Objectives
-
-1. **Behavioral Prediction Model**:
-   - Predict migration behaviors (e.g., detours, stopovers, and direct crossings).
-   - Integrate temporal, spatial, and environmental data to refine predictions.
-
-2. **Geospatial Analysis**:
-   - Map migratory routes to analyze detours via Southeast Europe.
-   - Examine patterns in seasonal migration and optimize routes based on environmental conditions.
-
-3. **Data Augmentation**:
-   - Address the small sample size (6 birds) by synthesizing rare events using **Generative AI** techniques.
-   - Enhance the dataset for robust modeling by creating simulated data for underrepresented scenarios (e.g., direct vs. detour routes).
-
-4. **Insights into Migration Optimization**:
-   - Investigate whether migration detours are optimal or sub-optimal.
-   - Factor in potential environmental benefits like wind assistance and historical colonization routes.
-
-
-
-## Acknowledgments
-
-Special thanks to Anders Tøttrup and the Movebank team for providing the dataset. The original study, "Migration of red-backed shrikes from the Iberian Peninsula," serves as the foundation for this analysis.
+- Datasets downloaded from: [Movebank](https://www.movebank.org/cms/webapp?gwt_fragment=page%3Dstudies%2Cpath%3Dstudy225376313)
